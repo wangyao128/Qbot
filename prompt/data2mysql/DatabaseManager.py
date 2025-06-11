@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import pandas as pd
 
 
@@ -71,9 +71,9 @@ class DatabaseManager:
     """
     with self.engine.connect() as conn:
       if params:
-        conn.execute(sql, params)
+        conn.execute(text(sql), params)
       else:
-        conn.execute(sql)
+        conn.execute(text(sql))
 
   def delete_data(self,table_name, condition):
     """
@@ -86,10 +86,32 @@ class DatabaseManager:
     """
     if not condition.strip():
       condition = '1=1'
+    sql: str = f"DELETE FROM {table_name} WHERE {condition}"
     with self.engine.connect() as conn:
-      sql = f"DELETE FROM {table_name} WHERE {condition}"
-    conn.execute(sql)
+      conn.execute(text(sql))
+      conn.commit()
 
+  def bulk_delete_from_dataframe(self, dataframe, table_name, columns):
+    """
+    根据 DataFrame 批量删除数据。
+
+    :param dataframe: 要删除的数据的 DataFrame
+    :param table_name: 要删除数据的表名
+    :param columns: 用于生成删除条件的列名列表
+    :return: 被删除的记录的 ID 列表
+    """
+    # 生成删除条件的 SQL 语句
+    values = []
+    where_clause = " AND ".join([f"{column} = :{column}" for column in columns])
+
+    for index, row in dataframe.iterrows():
+      values.append((row[columns[0]]))  # 根据实际列名调整
+
+    # 执行批量删除
+    delete_ids = self.session.query(text(f"{table_name}.id")).filter(text(where_clause), *values).all()
+    self.session.execute(text(f"DELETE FROM {table_name} WHERE {where_clause}"), values)
+    self.session.commit()
+    return delete_ids
 
 if __name__ == '__main__':
   # 创建数据库管理器实例

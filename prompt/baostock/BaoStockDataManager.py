@@ -3,6 +3,8 @@ from datetime import date, datetime, timedelta
 import baostock as baostock
 import pandas as pd
 
+
+
 # from prompt.data2mysql.DatabaseManager import DatabaseManager
 # from pyfunds.backtest.xalpha.cons import today_obj
 
@@ -66,16 +68,39 @@ class BaoStockDataManager:
 
   def getHistoryKData(self,stock_code, start_date, end_date):
     #### 获取指定股票指定日期的K线数据 ####
-    k_data = self.login_entity.query_history_k_data_plus(stock_code, "date,code,open,high,low,close,volume,amount,adjustflag",
-                                                         start_date, end_date)
-    print('query_history_k_data_plus respond error_code:' + k_data.error_code)
-    print('query_history_k_data_plus respond  error_msg:' + k_data.error_msg)
+    k_data = self.login_entity.query_history_k_data_plus(stock_code, "date,code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST",
+                                                         start_date, end_date, frequency="d", adjustflag="2")
+    #frequency：数据类型，默认为d，日k线；d=日k线、w=周、m=月、5=5分钟、15=15分钟、30=30分钟、60=60分钟k线数据，不区分大小写；
+    #指数没有分钟线数据；周线每周最后一个交易日才可以获取，月线每月最后一个交易日才可以获取。
+    # adjustflag：复权类型，默认不复权：3；1：后复权；2：前复权。已支持分钟线、日线、周线、月线前后复权。 BaoStock提供的是涨跌幅复权算法复权因子，
+    # print('query_history_k_data_plus respond error_code:' + k_data.error_code)
+    # print('query_history_k_data_plus respond  error_msg:' + k_data.error_msg)
     data_list = []
     while (k_data.error_code == '0') & k_data.next():
       # 获取一条记录，将记录合并在一起
       data_list.append(k_data.get_row_data())
     pd1 = pd.DataFrame(data_list, columns=k_data.fields)
-    return pd1
+    df = self.astypeKdata(pd1)
+    return df
+
+  def astypeKdata(self,df):
+    df[['date']] = df[['date']].apply(pd.to_datetime,format='%Y-%m-%d', errors='coerce')
+    df[['open','high','low','close','preclose','volume','amount','turn','pctChg','peTTM','pbMRQ','psTTM','pcfNcfTTM']] = df[['open','high','low','close','preclose','volume','amount','turn','pctChg','peTTM','pbMRQ','psTTM','pcfNcfTTM']].apply(pd.to_numeric, errors='coerce')
+    # df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d',  errors='coerce')
+    # df['open'] = pd.to_numeric(df['open'], errors='coerce')
+    # df['high'] = pd.to_numeric(df['high'], errors='coerce')
+    # df['low'] = pd.to_numeric(df['low'], errors='coerce')
+    # df['close'] = pd.to_numeric(df['close'], errors='coerce')
+    # df['preclose'] = pd.to_numeric(df['preclose'], errors='coerce')
+    # df['volume'] = pd.to_numeric(df['volume'], errors='coerce')
+    # df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
+    # df['turn'] = pd.to_numeric(df['turn'], errors='coerce')
+    # df['pctChg'] = pd.to_numeric(df['pctChg'], errors='coerce')
+    # df['peTTM'] = pd.to_numeric(df['peTTM'], errors='coerce')
+    # df['pbMRQ'] = pd.to_numeric(df['pbMRQ'], errors='coerce')
+    # df['psTTM'] = pd.to_numeric(df['psTTM'], errors='coerce')
+    # df['pcfNcfTTM'] = pd.to_numeric(df['pcfNcfTTM'].values, errors='coerce')
+    return df
 
   def getPerformanceExpressReportData(self,stock_code, start_date, end_date):
     #### 获取指定股票的季频公司业绩快报数据 ####
@@ -104,8 +129,6 @@ class BaoStockDataManager:
 
 
 
-
-
 if __name__ == '__main__':
   bs = BaoStockDataManager()
   bs.checkin()
@@ -114,18 +137,13 @@ if __name__ == '__main__':
   # print(bs.getAllStock('2025-05-23'))
   # print(bs.getHistoryKData('sh.600000', '2025-01-01', '2025-05-02'))
   # print(bs.getPerformanceExpressReportData('sh.600000', '2025-01-01', '2025-05-02'))
-  print(bs.getStockIndustryInfo(''))
+  # print(bs.getStockIndustryInfo(''))
+  print(bs.getHistoryKData('sh.600000', '2025-01-01', '2025-05-02'))
   bs.checkout()
-  # msg = bs.syncTradeDateInfo2DB()
-  # bs.checkin()
-  # rs = bs.getTradeDateInfo('2025-01-01', '2025-05-02')
-  # # print(msg)
-  # #### 打印结果集 ####
-  # data_list = []
-  # while (rs.error_code == '0') & rs.next():
-  #   # 获取一条记录，将记录合并在一起
-  #   data_list.append(rs.get_row_data())
-  # result = pd.DataFrame(data_list, columns=rs.fields)
+
+
+  # employees = [('Stuti', 28, 'Varanasi', 20000), ('Saumya', 32, 'Delhi', 25000)]
+  # df = pd.DataFrame(employees, columns=['Name', 'Age', 'City', 'Salary'])
 
   #### 结果集输出到csv文件 ####
   # result.to_csv("D:\\trade_datas.csv", encoding="gbk", index=False)
