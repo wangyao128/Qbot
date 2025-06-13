@@ -24,7 +24,7 @@ class DatabaseManager:
 
     :return: SQLAlchemy 引擎
     """
-    return self.engine
+    return self.engine.connect()
 
   def disconnect(self):
     """

@@ -55,8 +55,8 @@ CREATE TABLE hotstockinfo (
   create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='热点领域信息表';
-
-
+ALTER TABLE hotstockinfo MODIFY COLUMN hotspot_reson VARCHAR(400);
+ALTER TABLE hotstockinfo MODIFY COLUMN hotspot_reson VARCHAR(400) COMMENT '热点理由';
 #hotcorestock
 drop table hotcorestock;
 CREATE TABLE hotcorestock (
@@ -71,6 +71,9 @@ CREATE TABLE hotcorestock (
   create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (id)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='热点领域核心股票信息表';
+
+ALTER TABLE hotcorestock MODIFY COLUMN recommend_reason VARCHAR(400) COMMENT '推荐理由';
+
 
 
 

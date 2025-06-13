@@ -1,25 +1,23 @@
 from datetime import date, datetime, timedelta
 
-import baostock as baostock
+import baostock as bs
 import pandas as pd
 
 
 
-# from prompt.data2mysql.DatabaseManager import DatabaseManager
-# from pyfunds.backtest.xalpha.cons import today_obj
 
 
 class BaoStockDataManager:
   def __init__(self):
-    self.login_entity = None
+    self.login_entity = bs
 
   def checkin(self):
     #### 登陆系统 ####
-    lg = baostock.login()
+    lg = bs.login()
     # 显示登陆返回信息
     print('login respond error_code:' + lg.error_code)
     print('login respond  error_msg:' + lg.error_msg)
-    self.login_entity = baostock
+    self.login_entity = bs
     return lg
 
   def checkout(self):

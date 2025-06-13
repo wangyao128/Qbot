@@ -162,17 +162,17 @@ class KimiAPI:
     print("json数据:",json_str)
     data = json.loads(json_str)
 
-    photspot,pstock =self.process_nested_json(data)
+    photspot,pstock =self.process_nested_json(data,content)
     db_manager = DatabaseManager()
     exception_occurred = False
     try :
       # 创建数据库管理器实例
 
       engine_ts = db_manager.connect()
-      print("将热点领域数据写入数据库：",photspot.to_string())
+      # print("将热点领域数据写入数据库：",photspot.to_string())
       db_manager.delete_data("hotstockinfo", "hot_date = '" + content['date'] + "'")
       db_manager.insert_data("hotstockinfo",photspot)
-      print("将热点领域对应的股票数据写入数据库：",pstock.to_string())
+      # print("将热点领域对应的股票数据写入数据库：",pstock.to_string())
       #处理热点领域推荐的核心股票，增加hotstockinfo_id 列并赋值，使其可以与hotstockinfo表关联
       domain_id = db_manager.read_data(f"select id,domain_name from hotstockinfo where hot_date = '" + content['date'] + "'")
       for index, row in domain_id.iterrows():
@@ -192,11 +192,11 @@ class KimiAPI:
       else:
         return True
 
-  def process_pstock(self,data:pd.DataFrame):
-    #处理热点领域推荐的核心股票，增加hotstockinfo_id 列并赋值，使其可以与hotstockinfo表关联
-    data
+  # def process_pstock(self,data:pd.DataFrame):
+  #   #处理热点领域推荐的核心股票，增加hotstockinfo_id 列并赋值，使其可以与hotstockinfo表关联
+  #   data
 
-  def process_nested_json(self,data):
+  def process_nested_json(self,data,content:dict):
     #  处理嵌套的JSON数据
     dfhotspot = pd.DataFrame()
     dfstock = pd.DataFrame()
@@ -310,10 +310,11 @@ class KimiAPI:
 
 if __name__ == "__main__":
     kimiAPI = KimiAPI()
-    content = {"date": "2025-06-11", "role": "专业的股票分析师"}
+    content = {"date": "2025-06-13", "role": "专业的股票分析师","sync_time":"16：00"}
     json_str = kimiAPI.getKimistockAnalysis(content)
     FLG = kimiAPI.syncKimistockAnalysis2DB(json_str,content)
     print(FLG)
+    # 每天下午 四点钟同步会比较好
     # data = json.loads(json_str)
     # df = pd.json_normalize(json_str)
     # print(data)

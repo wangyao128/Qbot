@@ -4,7 +4,7 @@ import pandas as pd
 
 from sqlalchemy.exc import DatabaseError
 
-from prompt.baostock.BaoStockDataManager import BaoStockDataManager
+from prompt.baostockdata.BaoStockDataManager import BaoStockDataManager
 from prompt.data2mysql.DatabaseManager import DatabaseManager
 from datetime import datetime, date, timedelta
 
@@ -12,11 +12,6 @@ class BaoStockDataSyncManager:
   def __init__(self):
     self.db_manager = DatabaseManager()
     self.bs_data_manager = BaoStockDataManager()
-    if not self.db_manager.connect():
-       raise DatabaseError("无法连接到数据库")
-    elif not self.bs_data_manager.checkin():
-       raise  Exception("登陆失败")
-
 
 
   def connect(self):
@@ -61,10 +56,10 @@ class BaoStockDataSyncManager:
       #   data_list.append(result.get_row_data())
       # pd1 = pd.DataFrame(data_list, columns=result.fields)
 
-      # result 是 baostock.data.resultset  中的ResultData 类型 其中 result.get_data() 返回的是一个pd.DataFrame()
+      # result 是 baostockdata.data.resultset  中的ResultData 类型 其中 result.get_data() 返回的是一个pd.DataFrame()
       if result.empty:
         return "未获取到新的交易日信息"
-      print(result.count())
+      print("写入交易日的天数",result.count())
       # 删除已有区间的数据（可选）
       # db_manager.delete_data('tradedate', f'calendar_date BETWEEN "{start_date}" AND "{end_date}"', engine_ts)
 
@@ -75,9 +70,6 @@ class BaoStockDataSyncManager:
     except Exception as e:
       return f"同步交易日信息失败: {str(e)}"
 
-    finally:
-      self.disconnect()
-      # self.checkout()
 
   def syncStockBasicInfo2DB(self):
     ####   同步股票信息到数据库 ####
@@ -93,9 +85,6 @@ class BaoStockDataSyncManager:
     except Exception as e:
       return f"同步股票基础信息失败: {str(e)}"
 
-    finally:
-      self.disconnect()
-      # self.checkout()
 
   def syncAllStock2DB(self, trade_date):
     #### 同步交易日所有股票列表到数据库 ####
@@ -116,9 +105,7 @@ class BaoStockDataSyncManager:
       return f"同步股票代码信息成功: {result.count()} 交易日期：{trade_date}"
     except Exception as e:
       return f"同步股票代码信息失败: {str(e)}"
-    finally:
-      self.disconnect()
-      # self.checkout()
+
 
   def syncHistoryKData2DB(self, start_date, end_date):
     #### 同步指定指定日期的所有股票K线数据到数据库 ####
@@ -165,6 +152,12 @@ class BaoStockDataSyncManager:
 
 if __name__ == '__main__':
   bssyncdata = BaoStockDataSyncManager()
+  bssyncdata.checkin()
+  bssyncdata.connect()
+  # if not bssyncdata.db_manager.connect():
+  #   raise DatabaseError("无法连接到数据库")
+  # elif not bssyncdata.bs_data_manager.checkin():
+  #   raise Exception("登陆失败")
   # message1 = bssyncdata.syncTradeDateInfo2DB()
   # print(message1)
   # message2 = bssyncdata.syncStockBasicInfo2DB()
